@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "./interfaces/ISafe.sol";
 
 error ExecutionFailed();
+error InvalidNonce();
 
 contract GlobalModule {
     // keccak256(
@@ -118,5 +119,18 @@ contract GlobalModule {
         uint256 _nonce
     ) public pure returns (bytes32) {
         return keccak256(encodeTransactionData(safe, to, value, data, operation, _nonce));
+    }
+
+    /**
+     * @notice Increment the nonce manually
+     * @dev allows skipping a nonce if for some reason it fails
+     * @param currentNonce The nonce to skip, it needs to be the current nonce
+     */
+    function increaseNonce(uint256 currentNonce) public {
+        if (currentNonce != nonces[ISafe(msg.sender)]) {
+            revert InvalidNonce();
+        }
+
+        nonces[ISafe(msg.sender)]++;
     }
 }
