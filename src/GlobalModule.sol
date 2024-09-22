@@ -95,7 +95,8 @@ contract GlobalModule {
         uint8 operation,
         uint256 _nonce
     ) public view returns (bytes memory) {
-        bytes32 safeTxHash = keccak256(abi.encode(SAFE_TX_TYPEHASH, safe, to, value, keccak256(data), operation, _nonce));
+        bytes32 safeTxHash =
+            keccak256(abi.encode(SAFE_TX_TYPEHASH, safe, to, value, keccak256(data), operation, _nonce));
         return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeTxHash);
     }
 

@@ -124,7 +124,8 @@ interface ISafe {
         uint256 _nonce
     ) external view returns (bytes32);
 
-    /** @notice Executes a `operation` {0: Call, 1: DelegateCall}} transaction to `to` with `value` (Native Currency)
+    /**
+     * @notice Executes a `operation` {0: Call, 1: DelegateCall}} transaction to `to` with `value` (Native Currency)
      *          and pays `gasPrice` * `gasLimit` in `gasToken` token to `refundReceiver`.
      * @dev The fees are always transferred, even if the user transaction fails.
      *      This method doesn't perform any sanity check of the transaction, such as:

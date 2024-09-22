@@ -98,10 +98,7 @@ contract GlobalModuleTest is Test {
             0x0000000000000000000000000000000000000000000000000000000000000000
         );
 
-        assertEq(
-            module.nonces(safe),
-            1
-        );
+        assertEq(module.nonces(safe), 1);
     }
 
     function testRevertForFailedCall() public {
@@ -119,10 +116,7 @@ contract GlobalModuleTest is Test {
         vm.expectRevert(ExecutionFailed.selector);
         module.execTransaction(safe, address(reverter), 0, data, 0, concatenateBytesArray(signatures));
 
-        assertEq(
-            module.nonces(safe),
-            0
-        );
+        assertEq(module.nonces(safe), 0);
     }
 
     function testDelegateCall() public {
@@ -152,10 +146,7 @@ contract GlobalModuleTest is Test {
             0x0000000000000000000000000000000000000000000000000000000000000000
         );
 
-        assertEq(
-            module.nonces(safe),
-            1
-        );
+        assertEq(module.nonces(safe), 1);
     }
 
     function testRevertForFailedDelegateCall() public {
@@ -173,10 +164,7 @@ contract GlobalModuleTest is Test {
         vm.expectRevert(ExecutionFailed.selector);
         module.execTransaction(safe, address(reverter), 0, data, 1, concatenateBytesArray(signatures));
 
-        assertEq(
-            module.nonces(safe),
-            0
-        );
+        assertEq(module.nonces(safe), 0);
     }
 
     function testIncreaseNonce() public {
@@ -186,41 +174,18 @@ contract GlobalModuleTest is Test {
 
         bytes memory data = abi.encodeWithSelector(module.increaseNonce.selector, 0);
 
-        bytes32 txHash = safe.getTransactionHash(
-            address(module),
-            0,
-            data,
-            0,
-            0,
-            0,
-            0,
-            address(0),
-            address(0),
-            0
-        );
+        bytes32 txHash = safe.getTransactionHash(address(module), 0, data, 0, 0, 0, 0, address(0), address(0), 0);
 
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
         bool success = safe.execTransaction(
-            address(module),
-            0,
-            data,
-            0,
-            0,
-            0,
-            0,
-            address(0),
-            payable(0),
-            concatenateBytesArray(signatures)
+            address(module), 0, data, 0, 0, 0, 0, address(0), payable(0), concatenateBytesArray(signatures)
         );
 
         assertTrue(success);
 
-        assertEq(
-            module.nonces(safe),
-            1
-        );
+        assertEq(module.nonces(safe), 1);
     }
 
     function testIncreaseInvalidNonce() public {
@@ -230,40 +195,17 @@ contract GlobalModuleTest is Test {
 
         bytes memory data = abi.encodeWithSelector(module.increaseNonce.selector, 1);
 
-        bytes32 txHash = safe.getTransactionHash(
-            address(module),
-            0,
-            data,
-            0,
-            0,
-            0,
-            0,
-            address(0),
-            address(0),
-            0
-        );
+        bytes32 txHash = safe.getTransactionHash(address(module), 0, data, 0, 0, 0, 0, address(0), address(0), 0);
 
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
         vm.expectRevert();
         safe.execTransaction(
-            address(module),
-            0,
-            data,
-            0,
-            0,
-            0,
-            0,
-            address(0),
-            payable(0),
-            concatenateBytesArray(signatures)
+            address(module), 0, data, 0, 0, 0, 0, address(0), payable(0), concatenateBytesArray(signatures)
         );
 
-        assertEq(
-            module.nonces(safe),
-            0
-        );
+        assertEq(module.nonces(safe), 0);
     }
 
     function testRevertOnUnknownOperation() public {
