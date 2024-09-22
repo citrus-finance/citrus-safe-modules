@@ -14,9 +14,9 @@ contract GlobalModule {
         0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
 
     // keccak256(
-    //     "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
+    //     "SafeTx(address safe, address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
     // );
-    bytes32 private constant SAFE_TX_TYPEHASH = 0x3317c908a134e5c2510760347e7f23b965536b042f3c71282a3d92e04a7b29f5;
+    bytes32 private constant SAFE_TX_TYPEHASH = 0x53e4738ea125dc0fa1af119584e8a77584d1a6959a7eb39af54f5a2cbdcb274a;
 
     mapping(ISafe => uint256) public nonces;
 
@@ -71,11 +71,10 @@ contract GlobalModule {
 
     /**
      * @dev Returns the domain separator for the safe contract, as defined in the EIP-712 standard.
-     * @param safe The safe the transaction will be executed on
      * @return bytes32 The domain separator hash.
      */
-    function domainSeparator(ISafe safe) public pure returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, safe));
+    function domainSeparator() public view returns (bytes32) {
+        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, address(this)));
     }
 
     /**
@@ -95,9 +94,9 @@ contract GlobalModule {
         bytes calldata data,
         uint8 operation,
         uint256 _nonce
-    ) public pure returns (bytes memory) {
-        bytes32 safeTxHash = keccak256(abi.encode(SAFE_TX_TYPEHASH, to, value, keccak256(data), operation, _nonce));
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(safe), safeTxHash);
+    ) public view returns (bytes memory) {
+        bytes32 safeTxHash = keccak256(abi.encode(SAFE_TX_TYPEHASH, safe, to, value, keccak256(data), operation, _nonce));
+        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeTxHash);
     }
 
     /**
@@ -117,7 +116,7 @@ contract GlobalModule {
         bytes calldata data,
         uint8 operation,
         uint256 _nonce
-    ) public pure returns (bytes32) {
+    ) public view returns (bytes32) {
         return keccak256(encodeTransactionData(safe, to, value, data, operation, _nonce));
     }
 
