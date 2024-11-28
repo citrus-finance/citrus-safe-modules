@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./interfaces/ISafe.sol";
+import {ISafe} from "./interfaces/ISafe.sol";
 
-error ExecutionFailed();
-error InvalidNonce();
+error ExecutionFailed(address safe);
+error InvalidNonce(address safe, uint256 currentNonce, uint256 invalidNonce);
 
+/*
+* @title GlobalModule
+* @author Citrus
+* @notice Safe Module allowing the same operation on safes accross multiple chains
+* without having to sign multiple times.
+*/
 contract GlobalModule {
     // keccak256(
     //     "EIP712Domain(address verifyingContract)"
@@ -18,7 +24,8 @@ contract GlobalModule {
     // );
     bytes32 private constant SAFE_TX_TYPEHASH = 0x53e4738ea125dc0fa1af119584e8a77584d1a6959a7eb39af54f5a2cbdcb274a;
 
-    mapping(ISafe => uint256) public nonces;
+    // nonce for each safes to prevent replay attack
+    mapping(ISafe safe => uint256 nonce) public nonces;
 
     /**
      * @notice Executes a `operation` {0: Call, 1: DelegateCall}} transaction to `to` with `value` (Native Currency)
@@ -41,7 +48,7 @@ contract GlobalModule {
         bytes calldata data,
         uint8 operation,
         bytes memory signatures
-    ) public payable virtual returns (bool success) {
+    ) external payable virtual returns (bool) {
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
@@ -62,8 +69,11 @@ contract GlobalModule {
             safe.checkSignatures(txHash, txHashData, signatures);
         }
 
+        // If execution fails, the whole transaction should fail
+        // so that the nonce is not updated.
+        // @dev If that transaction cannot be executed, use skipNonce.
         if (!safe.execTransactionFromModule(to, value, data, operation)) {
-            revert ExecutionFailed();
+            revert ExecutionFailed(address(safe));
         }
 
         return true;
@@ -117,18 +127,19 @@ contract GlobalModule {
         bytes calldata data,
         uint8 operation,
         uint256 _nonce
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return keccak256(encodeTransactionData(safe, to, value, data, operation, _nonce));
     }
 
     /**
-     * @notice Increment the nonce manually
-     * @dev allows skipping a nonce if for some reason it fails
-     * @param currentNonce The nonce to skip, it needs to be the current nonce
+     * @notice Skip the nonce
+     * @dev allows skipping a nonce if for some reason the associated transaction fails
+     * @param nonceToSkip The nonce to skip, it needs to be the current nonce
+     *                     to prevent front-running attack
      */
-    function increaseNonce(uint256 currentNonce) public {
-        if (currentNonce != nonces[ISafe(msg.sender)]) {
-            revert InvalidNonce();
+    function skipNonce(uint256 nonceToSkip) external {
+        if (nonceToSkip != nonces[ISafe(msg.sender)]) {
+            revert InvalidNonce(msg.sender, nonces[ISafe(msg.sender)], nonceToSkip);
         }
 
         nonces[ISafe(msg.sender)]++;

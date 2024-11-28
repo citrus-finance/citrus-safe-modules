@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console, Vm} from "forge-std/Test.sol";
 
 import {ISafe} from "../src/interfaces/ISafe.sol";
-import {ISafeProxyFactory} from "../src/interfaces/ISafeProxyFactory.sol";
+import {ISafeProxyFactory} from "./interfaces/ISafeProxyFactory.sol";
 
 import {ModuleSetup} from "../src/ModuleSetup.sol";
 import {GlobalModule, ExecutionFailed} from "../src/GlobalModule.sol";
@@ -113,7 +113,7 @@ contract GlobalModuleTest is Test {
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
-        vm.expectRevert(ExecutionFailed.selector);
+        vm.expectPartialRevert(ExecutionFailed.selector);
         module.execTransaction(safe, address(reverter), 0, data, 0, concatenateBytesArray(signatures));
 
         assertEq(module.nonces(safe), 0);
@@ -161,18 +161,18 @@ contract GlobalModuleTest is Test {
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
-        vm.expectRevert(ExecutionFailed.selector);
+        vm.expectPartialRevert(ExecutionFailed.selector);
         module.execTransaction(safe, address(reverter), 0, data, 1, concatenateBytesArray(signatures));
 
         assertEq(module.nonces(safe), 0);
     }
 
-    function testIncreaseNonce() public {
+    function testSkipNonce() public {
         Vm.Wallet memory user1 = vm.createWallet("user1");
 
         ISafe safe = createSafe(getAddressArray(user1.addr));
 
-        bytes memory data = abi.encodeWithSelector(module.increaseNonce.selector, 0);
+        bytes memory data = abi.encodeWithSelector(module.skipNonce.selector, 0);
 
         bytes32 txHash = safe.getTransactionHash(address(module), 0, data, 0, 0, 0, 0, address(0), address(0), 0);
 
@@ -193,7 +193,7 @@ contract GlobalModuleTest is Test {
 
         ISafe safe = createSafe(getAddressArray(user1.addr));
 
-        bytes memory data = abi.encodeWithSelector(module.increaseNonce.selector, 1);
+        bytes memory data = abi.encodeWithSelector(module.skipNonce.selector, 1);
 
         bytes32 txHash = safe.getTransactionHash(address(module), 0, data, 0, 0, 0, 0, address(0), address(0), 0);
 
