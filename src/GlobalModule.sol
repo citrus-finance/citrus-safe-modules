@@ -48,7 +48,7 @@ contract GlobalModule {
         bytes calldata data,
         uint8 operation,
         bytes memory signatures
-    ) external payable virtual returns (bool) {
+    ) external virtual returns (bool) {
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {
