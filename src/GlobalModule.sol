@@ -20,9 +20,9 @@ contract GlobalModule {
         0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
 
     // keccak256(
-    //     "SafeTx(address safe, address to,uint256 value,bytes data,uint8 operation,uint256 nonce)"
+    //     "SafeTx(address safe, address to,uint256 value,bytes32 data,uint8 operation,uint256 nonce)"
     // );
-    bytes32 private constant SAFE_TX_TYPEHASH = 0x53e4738ea125dc0fa1af119584e8a77584d1a6959a7eb39af54f5a2cbdcb274a;
+    bytes32 private constant SAFE_TX_TYPEHASH = 0x0665fbc39e688daa835492cf4e62db9cc70e492a81eaeca0edc5df667def7cc6;
 
     // nonce for each safes to prevent replay attack
     mapping(ISafe safe => uint256 nonce) public nonces;
