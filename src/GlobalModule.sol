@@ -27,6 +27,9 @@ contract GlobalModule {
     // nonce for each safes to prevent replay attack
     mapping(ISafe safe => uint256 nonce) public nonces;
 
+    // Tracks which txHashes have been executed
+    mapping(ISafe safe => mapping(bytes32 executedTxHash => bool)) public executedTxHashes;
+
     /**
      * @notice Executes a `operation` {0: Call, 1: DelegateCall}} transaction to `to` with `value` (Native Currency)
      * @dev This method doesn't perform any sanity check of the transaction, such as:
@@ -75,6 +78,8 @@ contract GlobalModule {
         if (!safe.execTransactionFromModule(to, value, data, operation)) {
             revert ExecutionFailed(address(safe));
         }
+
+        executedTxHashes[safe][txHash] = true;
 
         return true;
     }

@@ -45,7 +45,7 @@ contract GlobalModuleTest is Test {
     GlobalModule public module;
 
     function setUp() public {
-        vm.createSelectFork("https://rpc.sepolia.org");
+        vm.createSelectFork("https://sepolia.drpc.org");
 
         storageSetter = new StorageSetter();
         reverter = new Reverter();
@@ -80,6 +80,8 @@ contract GlobalModuleTest is Test {
 
         bytes32 txHash = module.getTransactionHash(safe, address(storageSetter), 0, data, 0, 0);
 
+        assertFalse(module.executedTxHashes(safe, txHash));
+
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
@@ -99,6 +101,7 @@ contract GlobalModuleTest is Test {
         );
 
         assertEq(module.nonces(safe), 1);
+        assertTrue(module.executedTxHashes(safe, txHash));
     }
 
     function testRevertForFailedCall() public {
@@ -110,6 +113,8 @@ contract GlobalModuleTest is Test {
 
         bytes32 txHash = module.getTransactionHash(safe, address(reverter), 0, data, 0, 0);
 
+        assertFalse(module.executedTxHashes(safe, txHash));
+
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
@@ -117,6 +122,7 @@ contract GlobalModuleTest is Test {
         module.execTransaction(safe, address(reverter), 0, data, 0, concatenateBytesArray(signatures));
 
         assertEq(module.nonces(safe), 0);
+        assertFalse(module.executedTxHashes(safe, txHash));
     }
 
     function testDelegateCall() public {
@@ -127,6 +133,8 @@ contract GlobalModuleTest is Test {
         bytes memory data = abi.encodeWithSelector(storageSetter.setStorage.selector, bytes3(0xbaddad));
 
         bytes32 txHash = module.getTransactionHash(safe, address(storageSetter), 0, data, 1, 0);
+
+        assertFalse(module.executedTxHashes(safe, txHash));
 
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
@@ -147,6 +155,7 @@ contract GlobalModuleTest is Test {
         );
 
         assertEq(module.nonces(safe), 1);
+        assertTrue(module.executedTxHashes(safe, txHash));
     }
 
     function testRevertForFailedDelegateCall() public {
@@ -158,6 +167,8 @@ contract GlobalModuleTest is Test {
 
         bytes32 txHash = module.getTransactionHash(safe, address(reverter), 0, data, 1, 0);
 
+        assertFalse(module.executedTxHashes(safe, txHash));
+
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
@@ -165,6 +176,7 @@ contract GlobalModuleTest is Test {
         module.execTransaction(safe, address(reverter), 0, data, 1, concatenateBytesArray(signatures));
 
         assertEq(module.nonces(safe), 0);
+        assertFalse(module.executedTxHashes(safe, txHash));
     }
 
     function testSkipNonce() public {
@@ -176,6 +188,8 @@ contract GlobalModuleTest is Test {
 
         bytes32 txHash = safe.getTransactionHash(address(module), 0, data, 0, 0, 0, 0, address(0), address(0), 0);
 
+        assertFalse(module.executedTxHashes(safe, txHash));
+
         bytes[] memory signatures = new bytes[](1);
         signatures[0] = signEIP712(user1, txHash);
 
@@ -186,6 +200,7 @@ contract GlobalModuleTest is Test {
         assertTrue(success);
 
         assertEq(module.nonces(safe), 1);
+        assertFalse(module.executedTxHashes(safe, txHash));
     }
 
     function testIncreaseInvalidNonce() public {
